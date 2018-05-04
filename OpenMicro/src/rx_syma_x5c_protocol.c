@@ -339,8 +339,19 @@ u8 decode_syma_x5c()
 	aux[CH_VID]	 	=( rxdata[4] & 0x80 )? 1 : 0;//video
 	aux[CH_PIC] 	=( rxdata[4] & 0x40 )? 1 : 0 ;//pic
 	aux[CH_FLIP] 	=( rxdata[6] & 0x40 )? 1 : 0 ;//flip
-	aux[CH_EXPERT]=( rxdata[5] & 0x80 )? 1 : 0 ;// L / H speed mode
-	aux[CH_HEADFREE]=( rxdata[7] & 0x80 )? 0 : 1 ;//acro
+	
+	#if (LEVELMODE == CH_EXPERT)
+	aux[CH_EXPERT]=( rxdata[5] & 0x80 )? 0 : 1 ;// L / H mode button - levelmode
+	#else
+	aux[CH_EXPERT]=( rxdata[5] & 0x80 )? 1 : 0 ;// L / H speed mode - rates mode
+	#endif
+	
+	
+	#if (AIRMODE_HOLD_SWITCH == CH_HEADFREE)
+	aux[CH_HEADFREE]=( rxdata[7] & 0x80 )? 1 : 0 ;// airmode
+	#else
+	aux[CH_HEADFREE]=( rxdata[7] & 0x80 )? 0 : 1 ;// levelmode
+	#endif
 	
 	//aux[???] = ( rxdata[6] & 0x80 )? 1 : 0 ; //flip switch, while holding down 3 sec
 	
