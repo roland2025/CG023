@@ -188,7 +188,10 @@
 #define RX_SYMA_X5C_PROTOCOL
 
 // uncomment next line to use Syma X5SC stock transmitter
-#define USE_STOCK_TX
+//#define USE_STOCK_TX
+
+// uncomment to use Esky ET6I transmitter
+#define USE_ET6I_TX
 
 // 0 - 3 - power for telemetry
 #define TX_POWER 1
