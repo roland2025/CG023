@@ -42,7 +42,7 @@ THE SOFTWARE.
 // compatibility with older version hardware.h
 #if ( defined RADIO_XN297 || defined RADIO_XN297L)
     #error PROTOCOL needs NRF24 compatible radio
-#endif
+#endif /*  RX_SYMA_X5C_PROTOCOL */
 
 // Bit vector from bit position
 #define BV(bit) (1 << bit)
@@ -100,7 +100,7 @@ void rx_init()
 	xn_writereg( EN_RXADDR , 0x3F );
 	#else
 	xn_writereg( EN_RXADDR , 1 ); // pipe 0 only
-	#endif
+	#endif /*  USE_STOCK_TX */
 
 	xn_writereg( RF_SETUP , rf_setup);  // 
 	xn_writereg( RX_PW_P0 , PAYLOADSIZE ); // payload size
@@ -160,7 +160,7 @@ void rx_init()
 	// should be 0xc6
 	extern void failloop( int);
 	if ( temp != 0xc6) failloop(3);
-#endif	
+#endif	 /* RADIO_CHECK */
 }
 
 
@@ -409,7 +409,7 @@ int decode_syma_x5c()
     return 0;
 }
 
-#endif
+#endif /*  USE_STOCK_TX */
 
 
 //
@@ -427,7 +427,7 @@ unsigned long lastrxtime;
 unsigned long secondtimer;
 unsigned int rx_chan_count[RX_CHAN_COUNT];
 #warning "RX debug enabled"
-#endif
+#endif /* RXDEBUG */
 
 
 #include <stdlib.h>
@@ -451,7 +451,7 @@ void checkrx( void)
 				
 					#ifdef SERIAL_INFO	
 					printf( " BIND \n");
-					#endif
+					#endif /* SERIAL_INFO */
 				}
 			}
 			else
@@ -459,7 +459,7 @@ void checkrx( void)
 				#ifdef RXDEBUG	
 				rxdebug.packettime = gettime() - lastrxtime;
 				lastrxtime = gettime();
-				#endif
+				#endif /* RXDEBUG */
 				
 				int pass = decode_syma_x5c();
 			 
@@ -481,7 +481,7 @@ void checkrx( void)
 				{
 				#ifdef RXDEBUG	
 				rxdebug.failcount++;
-				#endif	
+				#endif /* RXDEBUG */
 				}
 			
 			}// end normal rx mode
@@ -515,7 +515,7 @@ if ( time - lastrx > 8000* (sizeof(chans) - 2) )
 				packetrx = 0;
 				secondtimer = gettime();
 			}
-#endif
+#endif /* RXDEBUG */
 
 }
 	
