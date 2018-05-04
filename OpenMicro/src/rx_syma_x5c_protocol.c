@@ -64,6 +64,13 @@ extern char auxchange[AUXNUMBER];
 	uint8_t chans[RX_CHAN_COUNT] = {0x09, 0x30, 0x40, 0x20}; // channels for binding
 	//uint8_t data_chans[12] = {40, 43,52,55, 56, 59, 68,71,72,75,84,87}; // channels, where data is received
 #else
+	#ifdef USE_ET6I_TX
+		uint8_t rxaddress[4] =  {0x00, 0x00, 0x00, 0x00};
+		#define TX_BITRATE BITRATE_1M
+		#define PAYLOADSIZE 13
+		#define RX_CHAN_COUNT 2 // 2 data channels
+		uint8_t chans[RX_CHAN_COUNT] = {50, 50}; // channels for data, selected on runtime, binding channel 50
+	#else
 	// Syma X5C with Devo transmitter
 	static int rxaddress[5] =  {0x6D,0x6A,0x73,0x73,0x73};
 	#define TX_BITRATE BITRATE_2M
@@ -71,7 +78,8 @@ extern char auxchange[AUXNUMBER];
 uint8_t chans[15] = {0x1d, 0x2f, 0x26, 0x3d, 0x15, 0x2b, 0x25, 0x24, 
 													 0x27, 0x2c, 0x1c, 0x3e, 0x39, 0x2d, 0x22};
 	#define RX_CHAN_COUNT 16
-#endif
+	#endif /*  USE_ET6I_TX */
+#endif /*  USE_STOCK_TX */
 
 
 
@@ -85,7 +93,11 @@ void rx_init()
 			xn_activate(0x53);
 	}
 
+	#ifdef USE_ET6I_TX
+	xn_writeregmulti(RX_ADDR_P0, rxaddress, 3);
+	#else
 	xn_writerxaddress( rxaddress);
+	#endif
 
 	uint8_t rf_setup=0;
 	uint8_t bitrate=TX_BITRATE;
@@ -104,23 +116,35 @@ void rx_init()
 
 	xn_writereg( RF_SETUP , rf_setup);  // 
 	xn_writereg( RX_PW_P0 , PAYLOADSIZE ); // payload size
+	
+	#ifdef USE_STOCK_TX
 	xn_writereg( RX_PW_P1 , PAYLOADSIZE ); // payload size
 	xn_writereg( RX_PW_P2 , PAYLOADSIZE ); // payload size
 	xn_writereg( RX_PW_P3 , PAYLOADSIZE ); // payload size
 	xn_writereg( RX_PW_P4 , PAYLOADSIZE ); // payload size
 	xn_writereg( RX_PW_P5 , PAYLOADSIZE ); // payload size
+	#endif /*  USE_STOCK_TX */
+	
 	xn_writereg( SETUP_RETR , 0 ); // no retransmissions ( redundant?)
+	
+	#ifndef USE_ET6I_TX
 	xn_writereg( SETUP_AW , AW_5B ); // address size (5 bytes)
-	xn_command( FLUSH_RX);
 	xn_writereg( RF_CH , 0x08 );  // bind  channel
+	#else
+	xn_writereg( SETUP_AW , AW_3B ); // address size (3 bytes)
+	xn_writereg( RF_CH , 50 );  // bind  channel
+	
+	#endif /*  USE_ET6I_TX */
 
+	xn_command( FLUSH_RX);
+	
 	xn_activate(0x53); // BK24xx bank switch
 
 	if ( xn_readreg(0x07) & 0x80 ) 
 	{
 		bkfound = 1;
 		
-		#ifdef USE_STOCK_TX
+		#if defined(USE_STOCK_TX) || defined(USE_ET6I_TX)
 		if(0x63==xn_readreg(0x08))
 		{
 			// BK2425 chip detected (chip ID is the same as BK2423)
@@ -142,15 +166,15 @@ void rx_init()
 			xn_writeregmulti(0x0D, (uint8_t *) "\x36\xB4\x80\x00", 4);
 			xn_writeregmulti(0x0E, (uint8_t *) "\x41\x10\x04\x82\x20\x08\x08\xF2\x7D\xEF\xFF", 11);	
 		}
-		#endif
+		#endif /*  USE_STOCK_TX */
 	} 
     
 	xn_activate(0x53); // switch bank back
 	
 	uint8_t config=0;
 	config=xn_readreg(CONFIG);
-	config|=BV(PWR_UP) | BV(CRCO) | BV(EN_CRC) | BV(MASK_MAX_RT); // power up, enable crc
-	
+	config|=BV(PWR_UP) | BV(CRCO) | BV(EN_CRC); // power up, enable crc
+	// | BV(MASK_MAX_RT)
 	xn_command( FLUSH_RX);
 	
 	xn_writereg( CONFIG, config );
@@ -184,7 +208,7 @@ int rxdata[PAYLOADSIZE];
 
 int rxmode = RXMODE_BIND;
 
-
+#ifndef USE_ET6I_TX
 float syma_scale( int input)
 {
   float result = 0;
@@ -195,9 +219,11 @@ float syma_scale( int input)
 		else  result = - input * 0.007874f ; 
 return result;
 }
+#else
 
+#endif /*  USE_ET6I_TX */
 
-#ifdef USE_STOCK_TX
+#if defined(USE_STOCK_TX)
 	
 //#define TRIM_C 0.0032258064516129f
 #define TRIM_C 0.01f
@@ -356,8 +382,99 @@ u8 decode_syma_x5c()
 	return 1;
 }
 
-#else
+#elif defined(USE_ET6I_TX)
 
+u8 channel_code=0;
+
+
+void set_channels() {
+	uint32_t channel_ord = channel_code-10;
+    u8 channel1, channel2;
+    chans[0] = 10 + (u8) ((37 + channel_ord*5) % 74);
+    chans[1] = 10 + (u8) ((channel_ord*5) % 74) ;
+}
+
+/** Check if bind packet is valid
+@return 1 when packet is valid, 0 when invalid
+*/
+u8 decode_bind_packet()
+{
+	
+	if(0x18 != rxdata[4] && 0x29 != rxdata[5])
+		return 0;
+	
+	// get TX address
+	rxaddress[0]=rxdata[2];
+	rxaddress[1]=rxdata[1];
+	rxaddress[2]=rxdata[0];
+	rxaddress[3]=0xBB;
+	
+	channel_code=rxdata[3];
+		
+	xn_writereg( SETUP_AW , AW_4B ); // address size (4 bytes)
+	xn_writeregmulti(RX_ADDR_P0, rxaddress, 4);
+	
+	set_channels();
+	
+	return 1;
+}
+
+float esky_throttle(uint16_t data)
+{
+	float f=data-1500.0f;
+	f/=700.0f;
+	f-=0.5f;
+	return -f;
+}
+float esky_scale(uint16_t data)
+{
+	float f=data-1500.0f;
+	f/=-500.0f;
+	return f;
+}
+
+uint16_t t_val=0;
+/**
+@return 0 when failed to decode packet
+*/
+u8 decode_syma_x5c()
+{
+	
+	if(0x00==rxdata[12])
+		return 0;
+	
+	t_val=rxdata[8]<<8 | rxdata[9];
+	rx[THROTTLE] 	= esky_throttle( rxdata[4]<<8 | rxdata[5]);
+	rx[YAW] 			= -esky_scale( rxdata[6]<<8 | rxdata[7])/0.8f;
+	float roll=esky_scale( rxdata[0]<<8 | rxdata[1])/0.8f;
+	if(roll < 0)
+		roll /= 0.96f;
+	else
+		roll /=1.03f;
+	rx[ROLL] 	  = roll;
+	rx[PITCH] 			= esky_scale( rxdata[2]<<8 | rxdata[3])/0.68f;
+//	
+//	aux[CH_VID]	 	=( rxdata[4] & 0x80 )? 1 : 0;//video
+//	aux[CH_PIC] 	=( rxdata[4] & 0x40 )? 1 : 0 ;//pic
+//	aux[CH_FLIP] 	=( rxdata[6] & 0x40 )? 1 : 0 ;//flip
+	aux[CH_EXPERT]=(( rxdata[10]<<8 | rxdata[11] ) > 1500)? 0 : 1 ;// L / H speed mode
+	aux[CH_HEADFREE]=(( rxdata[8]<<8 | rxdata[9] ) > 1500)? 0 : 1 ;//acro
+//	
+//	//aux[???] = ( rxdata[6] & 0x80 )? 1 : 0 ; //flip switch, while holding down 3 sec
+//	
+	// update change flags
+	for ( int i = 0 ; i < AUXNUMBER - 2 ; i++)
+	{
+		auxchange[i] = 0;
+		if ( lastaux[i] != aux[i] ) auxchange[i] = 1;
+		lastaux[i] = aux[i];
+	}
+	
+	
+	return 1;
+}
+
+#else
 
 /** Check if bind packet is valid
 @return 1 when packet is valid, 0 when invalid
