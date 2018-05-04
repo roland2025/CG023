@@ -1,1 +1,10 @@
 the board pictured has a missing inductor, it was repaired later
+
+
+==Syma X5SC==
+Motor controllers on image "board1" are 9926A TF526C
+https://www.mouser.com/ds/2/149/FDS9926A-888947.pdf
+
+Radio chip is Beken BK2425
+https://www.interoberlin.de/downloads/syma-x8c/bk2425.pdf
+
