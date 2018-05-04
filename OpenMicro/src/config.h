@@ -119,11 +119,11 @@
 
 #define HEADLESSMODE CH_OFF
 
-#define LEVELMODE CH_AUX1
+#define LEVELMODE CH_HEADFREE
 
-#define RATES CH_ON
+#define RATES CH_EXPERT
 
-#define STARTFLIP CH_OFF
+#define STARTFLIP CH_FLIP
 
 #define LEDS_ON CH_ON
 
@@ -187,6 +187,8 @@
 //#define RX_Q282_PROTOCOL
 #define RX_SYMA_X5C_PROTOCOL
 
+// uncomment next line to use Syma X5SC stock transmitter
+#define USE_STOCK_TX
 
 // 0 - 3 - power for telemetry
 #define TX_POWER 1
