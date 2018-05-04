@@ -16,6 +16,19 @@ void xn_writereg( int reg , int val)
 	spi_csoff();
 }
 
+void xn_writeregmulti(uint8_t reg, const uint8_t data[], uint8_t length)
+{
+	reg = reg&REGISTER_MASK;
+	reg = reg|W_REGISTER;
+	spi_cson();
+	spi_sendbyte( reg);
+	for (uint8_t i = 0; i < length; i++)
+	{
+		spi_sendbyte( data[i]);
+	}
+	spi_csoff();
+}
+
 int xn_readreg( int reg)
 {
 	reg = reg&REGISTER_MASK;

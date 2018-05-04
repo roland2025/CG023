@@ -2,6 +2,7 @@
 
 void xn_writerxaddress(  int *addr );
 void xn_writereg( int reg , int val);
+void xn_writeregmulti(uint8_t reg, const uint8_t data[], uint8_t length);
 int xn_command( int command);
 int xn_readreg( int reg);
 void xn_readpayload( int *data , int size );
