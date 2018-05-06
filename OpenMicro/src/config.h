@@ -208,6 +208,9 @@
 //#define BUZZER_ENABLE
 
 
+// Comment out to disable pid tuning gestures
+//#define PID_GESTURE_TUNING
+//#define COMBINE_PITCH_ROLL_PID_TUNING
 
 
 
@@ -327,4 +330,12 @@
 // so the beacon works after in-flight reset
 #ifdef RX_BAYANG_PROTOCOL_BLE_BEACON
 #undef STOP_LOWBATTERY
+#endif
+
+#ifdef PID_GESTURE_TUNING
+	#if !defined(RX_SYMA_X5C_PROTOCOL)
+		#warning "PID gesture tuning not available"
+		// need to implement loadcal + savecal functions
+		#undef PID_GESTURE_TUNING
+	#endif
 #endif

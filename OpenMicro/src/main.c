@@ -110,6 +110,7 @@ extern int failsafe;
 
 // for led flash on gestures
 int ledcommand = 0;
+int ledblink = 0;
 unsigned long ledcommandtime = 0;
 
 void failloop( int val);
@@ -166,7 +167,14 @@ int main(void)
     #ifdef AUX1_START_ON
     aux[CH_AUX1] = 1;
     #endif
-    
+	
+	#ifdef PID_GESTURE_TUNING
+	// loads acc calibration and gyro dafaults
+	// also autobind , pids
+//	loadcal();
+	#warning "loadcal() function not implemented"
+	#endif /* PID_GESTURE_TUNING */
+	
 	rx_init();
 
 	
@@ -374,25 +382,43 @@ int main(void)
             }else
             {// non bind
                 if ( failsafe) 
-                    {
-                        ledflash ( 500000, 15);			
-                    }
+								{
+										ledflash ( 500000, 15);			
+								}
                 else 
                 {
                     #ifdef GESTURES2_ENABLE
                     if (ledcommand)
-                              {
-                                  if (!ledcommandtime)
-                                      ledcommandtime = gettime();
-                                  if (gettime() - ledcommandtime > 500000)
-                                    {
-                                        ledcommand = 0;
-                                        ledcommandtime = 0;
-                                    }
-                                  ledflash(100000, 8);
-                              }
-                            else
-                        #endif // end gesture led flash
+										{
+												if (!ledcommandtime)
+														ledcommandtime = gettime();
+												if (gettime() - ledcommandtime > 500000)
+												{
+														ledcommand = 0;
+														ledcommandtime = 0;
+												}
+												ledflash(100000, 8);
+										}
+										else if (ledblink)
+										{
+											unsigned long time = gettime();
+											if (!ledcommandtime)
+											{
+													ledcommandtime = time;
+													ledoff( 255);
+											}
+											if (time - ledcommandtime > 500000)
+													{
+														ledblink--;
+														ledcommandtime = 0;
+													}
+											if ( time - ledcommandtime > 300000)
+											{
+												ledon( 255);
+											}
+										}
+										else
+										#endif // end gesture led flash
                     if ( aux[LEDS_ON] )
                     #if( LED_BRIGHTNESS != 15)	
                     led_pwm(LED_BRIGHTNESS);
