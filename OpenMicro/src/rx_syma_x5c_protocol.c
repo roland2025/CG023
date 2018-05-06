@@ -476,6 +476,13 @@ void checkrx( void)
 			 
 				if ( pass )
 				{ 	
+									
+					#ifndef DISABLE_EXPO
+						rx[ROLL] = rcexpo ( rx[ROLL] , EXPO_XY );
+						rx[PITCH] = rcexpo ( rx[PITCH] , EXPO_XY ); 
+						rx[YAW] = rcexpo ( rx[YAW] , EXPO_YAW ); 	
+					#endif
+					
 					failsafetime = gettime(); 
 					failsafe = 0;
                     #ifdef RXDEBUG	
