@@ -41,6 +41,15 @@ THE SOFTWARE.
 #include "defines.h"
 
 
+// Kp                            ROLL, PITCH, YAW
+float pidkp_flash[PIDNUMBER] = { 10.0e-2 , 10.0e-2  , 10e-1 }; 
+
+// Ki                            ROLL, PITCH, YAW
+float pidki_flash[PIDNUMBER] = { 0e-1  , 0e-1 , 0e-1 };	
+
+// Kd                            ROLL, PITCH, YAW
+float pidkd_flash[PIDNUMBER] = { 5e-1 , 5e-1  , 5.0e-1 };	
+
 
 // Kp											ROLL       PITCH     YAW
 float pidkp[PIDNUMBER] = { 16.0e-2 , 16.0e-2  , 10e-1 }; 

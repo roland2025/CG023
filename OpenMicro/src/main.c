@@ -79,6 +79,10 @@ void clk_init(void);
 
 void imu_init(void);
 
+#ifdef PID_GESTURE_TUNING
+extern void loadcal(void);
+#endif /* PID_GESTURE_TUNING */
+
 // looptime in seconds
 float looptime;
 // filtered battery in volts
@@ -171,12 +175,10 @@ int main(void)
 	#ifdef PID_GESTURE_TUNING
 	// loads acc calibration and gyro dafaults
 	// also autobind , pids
-//	loadcal();
-	#warning "loadcal() function not implemented"
+	loadcal();
 	#endif /* PID_GESTURE_TUNING */
 	
 	rx_init();
-
 	
     int count = 0;
         
@@ -219,13 +221,15 @@ int main(void)
     #ifndef ACRO_ONLY
     imu_init();
         
+    #ifndef PID_GESTURE_TUNING
     // read accelerometer calibration values from option bytes ( 2* 8bit)
     extern float accelcal[3];
-    extern int readdata( int datanumber);
+    extern int readdata(unsigned int datanumber);
 
     accelcal[0] = readdata( OB->DATA0 ) - 127;
     accelcal[1] = readdata( OB->DATA1 ) - 127;
-    #endif
+    #endif /* PID_GESTURE_TUNING */
+    #endif /* ACRO_ONLY */
 
 
     extern unsigned int liberror;

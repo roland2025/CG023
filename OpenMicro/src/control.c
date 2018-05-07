@@ -68,6 +68,10 @@ extern int ledblink;
 
 extern float apid(int x);
 
+#ifdef PID_GESTURE_TUNING
+extern void savecal(void);
+#endif /* PID_GESTURE_TUNING */
+
 #ifdef NOMOTORS
 // to maintain timing or it will be optimized away
 float tempx[4];
@@ -140,7 +144,7 @@ void control( void)
 					#ifndef ACRO_ONLY				
 			    acc_cal();
 				  extern float accelcal[3];			  
-				  fmc_write( accelcal[0] + 127 , accelcal[1] + 127);
+				  fmc_write1( accelcal[0] + 127 , accelcal[1] + 127);
 				  #endif
 			    // reset loop time so max loop time is not exceeding
 			    extern unsigned lastlooptime;
@@ -170,9 +174,13 @@ void control( void)
 						ledcommand = 1;
 						pid_gestures_used = 0;   
 				}
-							
-				//savecal();
-				#warning "savecal() function not available"
+				
+				#ifdef PID_GESTURE_TUNING
+				savecal();
+				#else
+				extern float accelcal[3];
+				fmc_write1( accelcal[0] + 127 , accelcal[1] + 127);
+				#endif /* PID_GESTURE_TUNING */
 				
 				// reset loop time
 				extern unsigned lastlooptime;
