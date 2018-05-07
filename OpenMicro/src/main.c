@@ -195,7 +195,7 @@ int main(void)
     #ifdef STOP_LOWBATTERY
     // infinite loop
     if ( vbattfilt < (float) STOP_LOWBATTERY_TRESH) failloop(2);
-    #endif
+    #endif /* STOP_LOWBATTERY */
 
 
 
@@ -208,7 +208,7 @@ int main(void)
 
     #ifdef SERIAL_ENABLE
     serial_init();
-    #endif
+    #endif /* SERIAL_ENABLE */
 
     #ifdef SERIAL_INFO	
 	printf( "Vbatt %2.2f \n", vbattfilt );
@@ -216,7 +216,7 @@ int main(void)
     printf( "NO MOTORS\n" );
 	#warning "NO MOTORS"
 	#endif
-    #endif
+    #endif /* SERIAL_INFO */
 
     #ifndef ACRO_ONLY
     imu_init();
@@ -235,10 +235,10 @@ int main(void)
     extern unsigned int liberror;
     if ( liberror ) 
     {
-          #ifdef SERIAL_INFO	
-            printf( "ERROR: I2C \n" );	
-            #endif
-            failloop(7);
+        #ifdef SERIAL_INFO
+        printf( "ERROR: I2C \n" );	
+        #endif /* SERIAL_INFO */
+        failloop(7);
     }
 
 
@@ -270,7 +270,7 @@ int main(void)
 		#ifdef DEBUG				
 		debug.totaltime += looptime;
 		lpf ( &debug.timefilt , looptime, 0.998 );
-		#endif
+		#endif /* DEBUG */
 		lastlooptime = time;
 		
 		if ( liberror > 20) 
@@ -287,7 +287,7 @@ int main(void)
 		
 		extern void imu_calc(void);		
 		imu_calc();		
-		#endif
+		#endif /* ACRO_ONLY */
 
 		float battadc = adc_read(0);
 		vbatt = battadc;
@@ -348,7 +348,7 @@ int main(void)
 
         #undef VDROP_FACTOR
         #define VDROP_FACTOR  minindex * 0.1f
-        #endif
+        #endif /* AUTO_VDROP_FACTOR */
 
 		if ( lowbatt ) hyst = HYST;
 		else hyst = 0.0f;
@@ -372,7 +372,7 @@ int main(void)
 		if ( vbatt_comp < ( (float)VBATTLOW + hyst2 - 0.2f ) ) lowbatt2 = 1;
 		else lowbatt2 = 0;
 		
-#endif		
+#endif /* AUX_LED_NUMBER */
 
 #if ( LED_NUMBER > 0)
         // led flash logic	
@@ -382,47 +382,47 @@ int main(void)
         {
             if ( rxmode == RXMODE_BIND)
             {// bind mode
-            ledflash ( 100000, 12);
+                ledflash ( 100000, 12);
             }else
             {// non bind
                 if ( failsafe) 
-								{
-										ledflash ( 500000, 15);			
-								}
+                {
+                    ledflash ( 500000, 15);			
+                }
                 else 
                 {
                     #ifdef GESTURES2_ENABLE
                     if (ledcommand)
-										{
-												if (!ledcommandtime)
-														ledcommandtime = gettime();
-												if (gettime() - ledcommandtime > 500000)
-												{
-														ledcommand = 0;
-														ledcommandtime = 0;
-												}
-												ledflash(100000, 8);
-										}
-										else if (ledblink)
-										{
-											unsigned long time = gettime();
-											if (!ledcommandtime)
-											{
-													ledcommandtime = time;
-													ledoff( 255);
-											}
-											if (time - ledcommandtime > 500000)
-													{
-														ledblink--;
-														ledcommandtime = 0;
-													}
-											if ( time - ledcommandtime > 300000)
-											{
-												ledon( 255);
-											}
-										}
-										else
-										#endif // end gesture led flash
+                    {
+                        if (!ledcommandtime)
+                            ledcommandtime = gettime();
+                        if (gettime() - ledcommandtime > 500000)
+                        {
+                            ledcommand = 0;
+                            ledcommandtime = 0;
+                        }
+                        ledflash(100000, 8);
+                    }
+                    else if (ledblink)
+                    {
+                        unsigned long time = gettime();
+                        if (!ledcommandtime)
+                        {
+                            ledcommandtime = time;
+                            ledoff( 255);
+                        }
+                        if (time - ledcommandtime > 500000)
+                        {
+                            ledblink--;
+                            ledcommandtime = 0;
+                        }
+                        if ( time - ledcommandtime > 300000)
+                        {
+                            ledon( 255);
+                        }
+                    }
+                    else
+                    #endif /* GESTURES2_ENABLE */
                     if ( aux[LEDS_ON] )
                     #if( LED_BRIGHTNESS != 15)	
                     led_pwm(LED_BRIGHTNESS);
@@ -432,10 +432,11 @@ int main(void)
                     else 
                     ledoff( 255);
                 }
-            } 		
+            }
             
         }
-#endif
+#endif /* LED_NUMBER */
+				
 #if ( AUX_LED_NUMBER > 0)		
         //AUX led flash logic		
 		if ( lowbatt2 ) 
@@ -448,7 +449,7 @@ int main(void)
 			}
 			else auxledoff( 255);
 		}
-#endif
+#endif /* AUX_LED_NUMBER */
 
 
 #if ( RGB_LED_NUMBER > 0)
@@ -459,7 +460,7 @@ int main(void)
 
 #ifdef BUZZER_ENABLE	
         buzzer();
-#endif
+#endif /* BUZZER_ENABLE */
 		
         checkrx();
             
