@@ -127,6 +127,9 @@
 
 #define LEDS_ON CH_ON
 
+// Airmode keeps the PID loop stabilizing the quads orientation even at zero throttle.
+// To stop the motors on ground a switch on the remote control is necessary.
+#define AIRMODE_HOLD_SWITCH CH_EXPERT // DEVO_CHAN_5
 
 
 // aux1 channel starts on if this is defined, otherwise off.
@@ -208,6 +211,9 @@
 //#define BUZZER_ENABLE
 
 
+// Comment out to disable pid tuning gestures
+//#define PID_GESTURE_TUNING
+//#define COMBINE_PITCH_ROLL_PID_TUNING
 
 
 
@@ -327,4 +333,12 @@
 // so the beacon works after in-flight reset
 #ifdef RX_BAYANG_PROTOCOL_BLE_BEACON
 #undef STOP_LOWBATTERY
+#endif
+
+#ifdef PID_GESTURE_TUNING
+	#if !defined(RX_SYMA_X5C_PROTOCOL)
+		#warning "PID gesture tuning not available"
+		// need to implement loadcal + savecal functions
+		#undef PID_GESTURE_TUNING
+	#endif
 #endif

@@ -76,12 +76,12 @@ void xn_writerxaddress(  int *addr )
 {
     int index = 0;
     spi_cson();
+    spi_sendbyte(W_REGISTER | RX_ADDR_P0);
 	while(index<5)
         {
         spi_sendbyte( addr[index] );
         index++;
         }
-    spi_sendbyte(W_REGISTER | RX_ADDR_P0);
     spi_csoff();
 }
 
@@ -90,8 +90,8 @@ void xn_writetxaddress(  int *addr )
 {
     int index = 0;
     spi_cson();
-	while(index<5)
     spi_sendbyte(W_REGISTER|TX_ADDR);
+	while(index<5)
         {
         spi_sendbyte( addr[index] );
         index++;

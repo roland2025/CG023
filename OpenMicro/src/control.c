@@ -49,6 +49,7 @@ extern float attitude[3];
 
 int onground = 1;
 int onground_long = 1;
+int pid_gestures_used = 0;
 
 float thrsum;
 
@@ -63,8 +64,13 @@ extern char auxchange[AUXNUMBER];
 extern char aux[AUXNUMBER];
 
 extern int ledcommand;
+extern int ledblink;
 
 extern float apid(int x);
+
+#ifdef PID_GESTURE_TUNING
+extern void savecal(void);
+#endif /* PID_GESTURE_TUNING */
 
 #ifdef NOMOTORS
 // to maintain timing or it will be optimized away
@@ -138,7 +144,7 @@ void control( void)
 					#ifndef ACRO_ONLY				
 			    acc_cal();
 				  extern float accelcal[3];			  
-				  fmc_write( accelcal[0] + 127 , accelcal[1] + 127);
+				  fmc_write1( accelcal[0] + 127 , accelcal[1] + 127);
 				  #endif
 			    // reset loop time so max loop time is not exceeding
 			    extern unsigned lastlooptime;
@@ -151,35 +157,92 @@ void control( void)
 		#ifdef GESTURES2_ENABLE
 		int command = gestures2();
 
-		if (command)
+		if (command != GESTURE_NONE)
 	  {
-		  if (command == 3)
-		    {
-			    gyro_cal();	// for flashing lights
-			    #ifndef ACRO_ONLY
-			    acc_cal();
-				  extern float accelcal[3];
-				  
-				  fmc_write( accelcal[0] + 127 , accelcal[1] + 127);
-				  #endif
-			    // reset loop time 
-			    extern unsigned lastlooptime;
-			    lastlooptime = gettime();
-		    }
-		  else
-		    {
-			    ledcommand = 1;
-			    if (command == 2)
-			      {
-				      aux[CH_AUX1] = 1;
+		  if (command == GESTURE_DDD)
+			{
+				
 
-			      }
-			    if (command == 1)
-			      {
-				      aux[CH_AUX1] = 0;
-			      }
-		    }
-	  }
+				//skip accel calibration if pid gestures used
+				if ( !pid_gestures_used )
+				{
+					gyro_cal();	// for flashing lights
+					acc_cal();    
+				}
+				else
+				{
+						ledcommand = 1;
+						pid_gestures_used = 0;   
+				}
+				
+				#ifdef PID_GESTURE_TUNING
+				savecal();
+				#else
+				extern float accelcal[3];
+				fmc_write1( accelcal[0] + 127 , accelcal[1] + 127);
+				#endif /* PID_GESTURE_TUNING */
+				
+				// reset loop time
+				extern unsigned lastlooptime;
+				lastlooptime = gettime();
+			}
+			else
+			{
+				if (command == GESTURE_UUU)
+				{
+					 #ifdef RX_BAYANG_PROTOCOL_TELEMETRY                  
+					 extern int rx_bind_enable;
+					 rx_bind_enable=!rx_bind_enable;
+					 ledblink = 2 - rx_bind_enable;
+					 pid_gestures_used = 1;  
+					 #endif
+				}
+							
+				if (command == GESTURE_RRD)
+				{
+					ledcommand = 1;
+					aux[CH_AUX1] = 1;
+
+				}
+				if (command == GESTURE_LLD)
+				{
+					ledcommand = 1;
+					aux[CH_AUX1] = 0;
+				}
+
+		#ifdef PID_GESTURE_TUNING
+				if ( command == GESTURE_UDR || command == GESTURE_UDL ) pid_gestures_used = 1;
+
+				if (command == GESTURE_UDU)
+				{
+					// Cycle to next pid term (P I D)
+					ledblink = next_pid_term();
+				}
+				if (command == GESTURE_UDD)
+				{
+					// Cycle to next axis (Roll Pitch Yaw)
+					ledblink = next_pid_axis();
+				}
+				if (command == GESTURE_UDR)
+				{
+					// Increase by 10%
+					ledblink = increase_pid();
+				}
+				if (command == GESTURE_UDL)
+				{
+					// Descrease by 10%
+					ledblink = decrease_pid();
+				}
+				// flash long on zero
+				if ( pid_gestures_used && ledblink == 0) ledcommand = 1;
+
+				// U D U - Next PID term
+				// U D D - Next PID Axis
+				// U D R - Increase value
+				// U D L - Descrease value
+			#endif
+			}
+	}
 		#endif		
 	}
 #ifndef DISABLE_HEADLESS 
@@ -271,7 +334,7 @@ else throttle = (rx[3] - 0.1f)*1.11111111f;
 
 
 // turn motors off if throttle is off and pitch / roll sticks are centered
-	if ( failsafe || (throttle < 0.001f && (!ENABLESTIX || !onground_long || aux[LEVELMODE] || (fabsf(rx[ROLL]) < (float) ENABLESTIX_TRESHOLD && fabsf(rx[PITCH]) < (float) ENABLESTIX_TRESHOLD && fabsf(rx[YAW]) < (float) ENABLESTIX_TRESHOLD ) ) ) ) 
+	if ( failsafe || (throttle < 0.001f && !(!aux[LEVELMODE] && aux[AIRMODE_HOLD_SWITCH] ) && (!ENABLESTIX || !onground_long || aux[LEVELMODE] || (fabsf(rx[ROLL]) < (float) ENABLESTIX_TRESHOLD && fabsf(rx[PITCH]) < (float) ENABLESTIX_TRESHOLD && fabsf(rx[YAW]) < (float) ENABLESTIX_TRESHOLD ) ) ) ) 
 	{	// motors off
 
 		if ( onground_long )

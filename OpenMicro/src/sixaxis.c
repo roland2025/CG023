@@ -58,6 +58,10 @@ extern debug_type debug;
 #define GYRO_ID_4 0x72
 #endif
 
+#ifdef PID_GESTURE_TUNING
+extern void loadcal(void);
+#endif /* PID_GESTURE_TUNING */
+
 void sixaxis_init( void)
 {
 // gyro soft reset
@@ -418,7 +422,10 @@ if ( time - timestart < CAL_TIME )
 	gyrocal[i] = 0;
 
 	}
-	
+		
+	#ifdef PID_GESTURE_TUNING
+	loadcal();
+	#endif /* PID_GESTURE_TUNING */
 }
 
 	
