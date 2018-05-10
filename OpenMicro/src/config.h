@@ -131,9 +131,13 @@
 // To stop the motors on ground a switch on the remote control is necessary.
 #define AIRMODE_HOLD_SWITCH CH_EXPERT // DEVO_CHAN_5
 
+// Uncomment if you want to use gestures to change CH_AUX2
+//#define GESTURES_AUX2
+
 
 // aux1 channel starts on if this is defined, otherwise off.
 //#define AUX1_START_ON
+//#define AUX2_START_ON
 
 // Gestures enable ( gestures 1 = acc only)
 //#define GESTURES1_ENABLE

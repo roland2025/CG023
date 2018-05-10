@@ -214,6 +214,24 @@ void control( void)
 					ledcommand = 1;
 					aux[CH_AUX1] = 0;
 				}
+                
+                #ifdef GESTURES_AUX2
+                if (command == GESTURE_UUR)
+                {
+                    // Switch CH_AUX2
+                    
+                    ledcommand = 2;
+                    aux[CH_AUX2] = 1;
+                }
+                if (command == GESTURE_UUL)
+                {
+                    // Switch CH_AUX2
+                    
+                    // switch mode 1
+                    ledcommand = 1;
+                    aux[CH_AUX2] = 0;
+                }
+                #endif /* GESTURES_AUX2 */
 
 		#ifdef PID_GESTURE_TUNING
 				if ( command == GESTURE_UDR || command == GESTURE_UDL ) pid_gestures_used = 1;

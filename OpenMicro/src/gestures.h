@@ -12,5 +12,7 @@ enum gestures_enum{
     GESTURE_UDD,
     GESTURE_UDR,
     GESTURE_UDL,
-    GESTURE_UUD
+    GESTURE_UUD,
+    GESTURE_UUR,
+    GESTURE_UUL
 };

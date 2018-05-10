@@ -170,7 +170,11 @@ int main(void)
 	
     #ifdef AUX1_START_ON
     aux[CH_AUX1] = 1;
-    #endif
+    #endif /* AUX1_START_ON */
+    
+    #if defined(GESTURES_AUX2) && defined(AUX2_START_ON)
+    aux[CH_AUX2] = 1;
+    #endif /* AUX2_START_ON */
 	
 	#ifdef PID_GESTURE_TUNING
 	// loads acc calibration and gyro dafaults

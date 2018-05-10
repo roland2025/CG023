@@ -142,6 +142,18 @@ const uint8_t command4[GSIZE] = {
 };
 #endif /* RX_BAYANG_PROTOCOL_TELEMETRY */
 
+#ifdef GESTURES_AUX2
+// U U R - Switch CH_AUX2 to 1 
+const uint8_t command10[GSIZE] = {
+    GESTURE_CENTER_IDLE, GESTURE_UP, GESTURE_CENTER, GESTURE_UP, GESTURE_CENTER, GESTURE_RIGHT, GESTURE_CENTER
+};
+
+// U U L - Switch CH_AUX2 to 0
+const uint8_t command11[GSIZE] = {
+    GESTURE_CENTER_IDLE, GESTURE_UP, GESTURE_CENTER, GESTURE_UP, GESTURE_CENTER, GESTURE_LEFT, GESTURE_CENTER
+};
+#endif /* GESTURES_AUX2 */
+
 #ifdef PID_GESTURE_TUNING
 // U D U - Next PID term
 const uint8_t command5[GSIZE] = {
@@ -237,6 +249,25 @@ int gesture_sequence(int currentgesture)
 		}
 		#endif
 		
+        #ifdef GESTURES_AUX2
+        if (check_command ( &gbuffer[0] , &command10[0] ))
+        {
+            // command 10
+
+            //change buffer so it does not trigger again
+            gbuffer[1] = GESTURE_OTHER;
+            return GESTURE_UUR;
+        }
+        if (check_command ( &gbuffer[0] , &command11[0] ))
+        {
+            // command 11
+
+            //change buffer so it does not trigger again
+            gbuffer[1] = GESTURE_OTHER;
+            return GESTURE_UUL;
+        }
+        #endif /* GESTURES_AUX2 */
+        
 		#ifdef PID_GESTURE_TUNING
 		if (check_command ( &gbuffer[0] , &command5[0] ))
 			{
