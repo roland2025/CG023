@@ -56,134 +56,134 @@ extern char lastaux[AUXNUMBER];
 extern char auxchange[AUXNUMBER];
 
 #ifdef USE_STOCK_TX
-	// Use Syma X5SC stock transmitter
-	int rxaddress[5] =  {0xab,0xac,0xad,0xae,0xaf};
-	#define TX_BITRATE BITRATE_250K
-	#define PAYLOADSIZE 10
-	#define RX_CHAN_COUNT 4
-	uint8_t chans[RX_CHAN_COUNT] = {0x09, 0x30, 0x40, 0x20}; // channels for binding
-	//uint8_t data_chans[12] = {40, 43,52,55, 56, 59, 68,71,72,75,84,87}; // channels, where data is received
+    // Use Syma X5SC stock transmitter
+    int rxaddress[5] =  {0xab,0xac,0xad,0xae,0xaf};
+    #define TX_BITRATE BITRATE_250K
+    #define PAYLOADSIZE 10
+    #define RX_CHAN_COUNT 4
+    uint8_t chans[RX_CHAN_COUNT] = {0x09, 0x30, 0x40, 0x20}; // channels for binding
+    //uint8_t data_chans[12] = {40, 43,52,55, 56, 59, 68,71,72,75,84,87}; // channels, where data is received
 #else
-	#ifdef USE_ET6I_TX
-		uint8_t rxaddress[4] =  {0x00, 0x00, 0x00, 0x00};
-		#define TX_BITRATE BITRATE_1M
-		#define PAYLOADSIZE 13
-		#define RX_CHAN_COUNT 2 // 2 data channels
-		uint8_t chans[RX_CHAN_COUNT] = {50, 50}; // channels for data, selected on runtime, binding channel 50
-	#else
-	// Syma X5C with Devo transmitter
-	static int rxaddress[5] =  {0x6D,0x6A,0x73,0x73,0x73};
-	#define TX_BITRATE BITRATE_2M
-	#define PAYLOADSIZE 16
-uint8_t chans[15] = {0x1d, 0x2f, 0x26, 0x3d, 0x15, 0x2b, 0x25, 0x24, 
-													 0x27, 0x2c, 0x1c, 0x3e, 0x39, 0x2d, 0x22};
-	#define RX_CHAN_COUNT 16
-	#endif /*  USE_ET6I_TX */
+    #ifdef USE_ET6I_TX
+        #include "rx_esky_et6i.h"
+        // Esky ET6I transmitter
+        
+        
+    #else
+        // Syma X5C with Devo transmitter
+        static int rxaddress[5] =  {0x6D,0x6A,0x73,0x73,0x73};
+        #define TX_BITRATE BITRATE_2M
+        #define PAYLOADSIZE 16
+        uint8_t chans[15] = {0x1d, 0x2f, 0x26, 0x3d, 0x15, 0x2b, 0x25, 0x24, 
+                             0x27, 0x2c, 0x1c, 0x3e, 0x39, 0x2d, 0x22};
+        #define RX_CHAN_COUNT 16
+        #endif /*  USE_ET6I_TX */
 #endif /*  USE_STOCK_TX */
 
 
 
-int bkfound = 0;
+u8 bkfound = 0;
 
+u8 currentchannel = 0;
 
 void rx_init()
 {
-	if (xn_readreg(0x07) & 0x80)
-	{
-			xn_activate(0x53);
-	}
+    if (xn_readreg(0x07) & 0x80)
+    {
+        xn_activate(0x53);
+    }
 
-	#ifdef USE_ET6I_TX
-	xn_writeregmulti(RX_ADDR_P0, rxaddress, 3);
-	#else
-	xn_writerxaddress( rxaddress);
-	#endif
+    #ifdef USE_ET6I_TX
+    xn_writeregmulti(RX_ADDR_P0, rxaddress, 3);
+    #else
+    xn_writerxaddress( rxaddress);
+    #endif
 
-	uint8_t rf_setup=0;
-	uint8_t bitrate=TX_BITRATE;
+    uint8_t rf_setup=0;
+    uint8_t bitrate=TX_BITRATE;
 
-	rf_setup = (rf_setup & 0xD7) | ((bitrate & 0x02) << 4) | ((bitrate & 0x01) << 3);
+    rf_setup = (rf_setup & 0xD7) | ((bitrate & 0x02) << 4) | ((bitrate & 0x01) << 3);
 
-	xn_writereg( CONFIG, BV(PWR_DOWN) );
+    xn_writereg( CONFIG, BV(PWR_DOWN) );
 
-	xn_writereg( EN_AA , 0 );	// aa disabled
-	
-	#ifdef USE_STOCK_TX
-	xn_writereg( EN_RXADDR , 0x3F );
-	#else
-	xn_writereg( EN_RXADDR , 1 ); // pipe 0 only
-	#endif /*  USE_STOCK_TX */
+    xn_writereg( EN_AA , 0 );   // aa disabled
 
-	xn_writereg( RF_SETUP , rf_setup);  // 
-	xn_writereg( RX_PW_P0 , PAYLOADSIZE ); // payload size
-	
-	#ifdef USE_STOCK_TX
-	xn_writereg( RX_PW_P1 , PAYLOADSIZE ); // payload size
-	xn_writereg( RX_PW_P2 , PAYLOADSIZE ); // payload size
-	xn_writereg( RX_PW_P3 , PAYLOADSIZE ); // payload size
-	xn_writereg( RX_PW_P4 , PAYLOADSIZE ); // payload size
-	xn_writereg( RX_PW_P5 , PAYLOADSIZE ); // payload size
-	#endif /*  USE_STOCK_TX */
-	
-	xn_writereg( SETUP_RETR , 0 ); // no retransmissions ( redundant?)
-	
-	#ifndef USE_ET6I_TX
-	xn_writereg( SETUP_AW , AW_5B ); // address size (5 bytes)
-	xn_writereg( RF_CH , 0x08 );  // bind  channel
-	#else
-	xn_writereg( SETUP_AW , AW_3B ); // address size (3 bytes)
-	xn_writereg( RF_CH , 50 );  // bind  channel
-	
-	#endif /*  USE_ET6I_TX */
+    #ifdef USE_STOCK_TX
+    xn_writereg( EN_RXADDR , 0x3F );
+    #else
+    xn_writereg( EN_RXADDR , 1 ); // pipe 0 only
+    #endif /*  USE_STOCK_TX */
 
-	xn_command( FLUSH_RX);
-	
-	xn_activate(0x53); // BK24xx bank switch
+    xn_writereg( RF_SETUP , rf_setup);  // 
+    xn_writereg( RX_PW_P0 , PAYLOADSIZE ); // payload size
 
-	if ( xn_readreg(0x07) & 0x80 ) 
-	{
-		bkfound = 1;
-		
-		#if defined(USE_STOCK_TX) || defined(USE_ET6I_TX)
-		if(0x63==xn_readreg(0x08))
-		{
-			// BK2425 chip detected (chip ID is the same as BK2423)
-			// https://www.interoberlin.de/downloads/syma-x8c/bk2425.pdf
-			//  For register 0 to 8 at bank 1, the byte order is inversed that the MSB byte is R/W before LSB byte. 
-			xn_writeregmulti(0x00, (uint8_t *) "\x40\x4B\x01\xE2", 4);
-			xn_writeregmulti(0x01, (uint8_t *) "\xC0\x4B\x00\x00", 4);
-			xn_writeregmulti(0x02, (uint8_t *) "\xD0\xFC\x8C\x02", 4);
-			xn_writeregmulti(0x03, (uint8_t *) "\x99\x00\x39\x21", 4);
-			xn_writeregmulti(0x04, (uint8_t *) "\xF9\x96\x82\x1B", 4); // ????
-			xn_writeregmulti(0x05, (uint8_t *) "\x24\x06\x7F\xA6", 4); // disable RSSI
-			xn_writeregmulti(0x06, (uint8_t *) "\x00\x00\x00\x00", 4); // reserved
-			xn_writeregmulti(0x07, (uint8_t *) "\x00\x00\x00\x00", 4); // reserved
-			// Byte order LSB to MSB
-			xn_writeregmulti(0x09, (uint8_t *) "\x00\x00\x00\x00", 4); // reserved
-			xn_writeregmulti(0x0A, (uint8_t *) "\x00\x00\x00\x00", 4); // reserved
-			xn_writeregmulti(0x0B, (uint8_t *) "\x00\x00\x00\x00", 4); // reserved
-			xn_writeregmulti(0x0C, (uint8_t *) "\x00\x12\x73\x00", 4); // compatible mode: dynamic; PLL settling: 120us
-			xn_writeregmulti(0x0D, (uint8_t *) "\x36\xB4\x80\x00", 4);
-			xn_writeregmulti(0x0E, (uint8_t *) "\x41\x10\x04\x82\x20\x08\x08\xF2\x7D\xEF\xFF", 11);	
-		}
-		#endif /*  USE_STOCK_TX */
-	} 
-    
-	xn_activate(0x53); // switch bank back
-	
-	uint8_t config=0;
-	config=xn_readreg(CONFIG);
-	config|=BV(PWR_UP) | BV(CRCO) | BV(EN_CRC); // power up, enable crc
-	// | BV(MASK_MAX_RT)
-	xn_command( FLUSH_RX);
-	
-	xn_writereg( CONFIG, config );
+    #ifdef USE_STOCK_TX
+    xn_writereg( RX_PW_P1 , PAYLOADSIZE ); // payload size
+    xn_writereg( RX_PW_P2 , PAYLOADSIZE ); // payload size
+    xn_writereg( RX_PW_P3 , PAYLOADSIZE ); // payload size
+    xn_writereg( RX_PW_P4 , PAYLOADSIZE ); // payload size
+    xn_writereg( RX_PW_P5 , PAYLOADSIZE ); // payload size
+    #endif /*  USE_STOCK_TX */
+
+    xn_writereg( SETUP_RETR , 0 ); // no retransmissions ( redundant?)
+
+    #ifndef USE_ET6I_TX
+    xn_writereg( SETUP_AW , AW_5B ); // address size (5 bytes)
+    xn_writereg( RF_CH , 0x08 );  // bind  channel
+    #else
+    xn_writereg( SETUP_AW , AW_3B ); // address size (3 bytes)
+    xn_writereg( RF_CH , chans[0] );  // bind  channel
+
+    #endif /*  USE_ET6I_TX */
+
+    xn_command( FLUSH_RX);
+
+    xn_activate(0x53); // BK24xx bank switch
+
+    if ( xn_readreg(0x07) & 0x80 ) 
+    {
+        bkfound = 1;
+        
+        #if defined(USE_STOCK_TX) || defined(USE_ET6I_TX)
+        if(0x63==xn_readreg(0x08))
+        {
+            // BK2425 chip detected (chip ID is the same as BK2423)
+            // https://www.interoberlin.de/downloads/syma-x8c/bk2425.pdf
+            //  For register 0 to 8 at bank 1, the byte order is inversed that the MSB byte is R/W before LSB byte. 
+            xn_writeregmulti(0x00, (uint8_t *) "\x40\x4B\x01\xE2", 4);
+            xn_writeregmulti(0x01, (uint8_t *) "\xC0\x4B\x00\x00", 4);
+            xn_writeregmulti(0x02, (uint8_t *) "\xD0\xFC\x8C\x02", 4);
+            xn_writeregmulti(0x03, (uint8_t *) "\x99\x00\x39\x21", 4);
+            xn_writeregmulti(0x04, (uint8_t *) "\xF9\x96\x82\x1B", 4); // ????
+            xn_writeregmulti(0x05, (uint8_t *) "\x24\x06\x7F\xA6", 4); // disable RSSI
+            xn_writeregmulti(0x06, (uint8_t *) "\x00\x00\x00\x00", 4); // reserved
+            xn_writeregmulti(0x07, (uint8_t *) "\x00\x00\x00\x00", 4); // reserved
+            // Byte order LSB to MSB
+            xn_writeregmulti(0x09, (uint8_t *) "\x00\x00\x00\x00", 4); // reserved
+            xn_writeregmulti(0x0A, (uint8_t *) "\x00\x00\x00\x00", 4); // reserved
+            xn_writeregmulti(0x0B, (uint8_t *) "\x00\x00\x00\x00", 4); // reserved
+            xn_writeregmulti(0x0C, (uint8_t *) "\x00\x12\x73\x00", 4); // compatible mode: dynamic; PLL settling: 120us
+            xn_writeregmulti(0x0D, (uint8_t *) "\x36\xB4\x80\x00", 4);
+            xn_writeregmulti(0x0E, (uint8_t *) "\x41\x10\x04\x82\x20\x08\x08\xF2\x7D\xEF\xFF", 11);	
+        }
+        #endif /*  USE_STOCK_TX */
+    } 
+
+    xn_activate(0x53); // switch bank back
+
+    uint8_t config=0;
+    config=xn_readreg(CONFIG);
+    config|=BV(PWR_UP) | BV(CRCO) | BV(EN_CRC); // power up, enable crc
+    // | BV(MASK_MAX_RT)
+    xn_command( FLUSH_RX);
+
+    xn_writereg( CONFIG, config );
 
 #ifdef RADIO_CHECK
-	int temp = xn_readreg( 0x0f); // rx address pipe 5	
-	// should be 0xc6
-	extern void failloop( int);
-	if ( temp != 0xc6) failloop(3);
+    int temp = xn_readreg( 0x0f); // rx address pipe 5	
+    // should be 0xc6
+    extern void failloop( int);
+    if ( temp != 0xc6) failloop(3);
 #endif	 /* RADIO_CHECK */
 }
 
@@ -191,17 +191,18 @@ void rx_init()
 
 static int checkpacket()
 {
-	spi_cson();
-	int status = spi_sendzerorecvbyte();
-	spi_csoff();
-	if( (status & B00001110) != B00001110 )
-	{
-		// rx fifo not empty		
-		return 2;	
-	}
-	
+    spi_cson();
+    int status = spi_sendzerorecvbyte();
+    spi_csoff();
+    if( (status & B00001110) != B00001110 )
+    {
+        // rx fifo not empty
+        return 2;
+    }
+
   return 0;
 }
+
 
 
 int rxdata[PAYLOADSIZE];
@@ -211,13 +212,13 @@ int rxmode = RXMODE_BIND;
 #ifndef USE_ET6I_TX
 float syma_scale( int input)
 {
-  float result = 0;
-  if ( input >= 0x80 )
-		{
-			result = (input - 0x80)  * 0.007874f ;
-		}
-		else  result = - input * 0.007874f ; 
-return result;
+    float result = 0;
+    if ( input >= 0x80 )
+    {
+        result = (input - 0x80)  * 0.007874f ;
+    }
+    else  result = - input * 0.007874f ; 
+    return result;
 }
 #else
 
@@ -395,96 +396,7 @@ u8 decode_syma_x5c()
 
 #elif defined(USE_ET6I_TX)
 
-u8 channel_code=0;
-
-
-void set_channels() {
-	uint32_t channel_ord = channel_code-10;
-    u8 channel1, channel2;
-    chans[0] = 10 + (u8) ((37 + channel_ord*5) % 74);
-    chans[1] = 10 + (u8) ((channel_ord*5) % 74) ;
-}
-
-/** Check if bind packet is valid
-@return 1 when packet is valid, 0 when invalid
-*/
-u8 decode_bind_packet()
-{
-	
-	if(0x18 != rxdata[4] && 0x29 != rxdata[5])
-		return 0;
-	
-	// get TX address
-	rxaddress[0]=rxdata[2];
-	rxaddress[1]=rxdata[1];
-	rxaddress[2]=rxdata[0];
-	rxaddress[3]=0xBB;
-	
-	channel_code=rxdata[3];
-		
-	xn_writereg( SETUP_AW , AW_4B ); // address size (4 bytes)
-	xn_writeregmulti(RX_ADDR_P0, rxaddress, 4);
-	
-	set_channels();
-	
-	return 1;
-}
-
-float esky_throttle(uint16_t data)
-{
-	float f=data-1500.0f;
-	f/=700.0f;
-	f-=0.5f;
-	return -f;
-}
-float esky_scale(uint16_t data)
-{
-	float f=data-1500.0f;
-	f/=-500.0f;
-	return f;
-}
-
-uint16_t t_val=0;
-/**
-@return 0 when failed to decode packet
-*/
-u8 decode_syma_x5c()
-{
-	
-	if(0x00==rxdata[12])
-		return 0;
-	
-	t_val=rxdata[8]<<8 | rxdata[9];
-	rx[THROTTLE] 	= esky_throttle( rxdata[4]<<8 | rxdata[5]);
-	rx[YAW] 			= -esky_scale( rxdata[6]<<8 | rxdata[7])/0.8f;
-	float roll=esky_scale( rxdata[0]<<8 | rxdata[1])/0.8f;
-	if(roll < 0)
-		roll /= 0.96f;
-	else
-		roll /=1.03f;
-	rx[ROLL] 	  = roll;
-	rx[PITCH] 			= esky_scale( rxdata[2]<<8 | rxdata[3])/0.68f;
-//	
-//	aux[CH_VID]	 	=( rxdata[4] & 0x80 )? 1 : 0;//video
-//	aux[CH_PIC] 	=( rxdata[4] & 0x40 )? 1 : 0 ;//pic
-//	aux[CH_FLIP] 	=( rxdata[6] & 0x40 )? 1 : 0 ;//flip
-	aux[CH_EXPERT]=(( rxdata[10]<<8 | rxdata[11] ) > 1500)? 0 : 1 ;// L / H speed mode
-	aux[CH_HEADFREE]=(( rxdata[8]<<8 | rxdata[9] ) > 1500)? 0 : 1 ;//acro
-//	
-//	//aux[???] = ( rxdata[6] & 0x80 )? 1 : 0 ; //flip switch, while holding down 3 sec
-//	
-	// update change flags
-	for ( int i = 0 ; i < AUXNUMBER - 2 ; i++)
-	{
-		auxchange[i] = 0;
-		if ( lastaux[i] != aux[i] ) auxchange[i] = 1;
-		lastaux[i] = aux[i];
-	}
-	
-	
-	return 1;
-}
-
+ 
 #else
 
 /** Check if bind packet is valid
@@ -560,100 +472,109 @@ unsigned int rx_chan_count[RX_CHAN_COUNT];
 
 #include <stdlib.h>
 
-int currentchannel = 0;
 unsigned long lastrx;
-					
+
 void checkrx( void)
 {
-		if ( checkpacket() ) 
-		{ 
-			xn_readpayload( rxdata , PAYLOADSIZE);
-			if ( RXMODE_BIND == rxmode )
-			{	// rx startup , bind mode	
-				if (decode_bind_packet()) 
-				{// bind packet received			
-					rxmode = RXMODE_NORMAL;				
+    if ( checkpacket() ) 
+    { 
+        xn_readpayload( rxdata , PAYLOADSIZE);
+        if ( RXMODE_BIND == rxmode )
+        {   // rx startup , bind mode
+            if (decode_bind_packet()) 
+            {// bind packet received
+                rxmode = RXMODE_NORMAL;
 
-				  xn_writereg( RF_CH, chans[0] ); // Set channel frequency	
-                    
-				
-					#ifdef SERIAL_INFO	
-					printf( " BIND \n");
-					#endif /* SERIAL_INFO */
-				}
-			}
-			else
-			{	// normal mode	
-				#ifdef RXDEBUG	
-				rxdebug.packettime = gettime() - lastrxtime;
-				lastrxtime = gettime();
-				#endif /* RXDEBUG */
-				
-				int pass = decode_syma_x5c();
-			 
-				if ( pass )
-				{ 	
-									
-					#ifndef DISABLE_EXPO
-						rx[ROLL] = rcexpo ( rx[ROLL] , EXPO_XY );
-						rx[PITCH] = rcexpo ( rx[PITCH] , EXPO_XY ); 
-						rx[YAW] = rcexpo ( rx[YAW] , EXPO_YAW ); 	
-					#endif
-					
-					failsafetime = gettime(); 
-					failsafe = 0;
-                    #ifdef RXDEBUG	
-                    packetrx++;
-                    if ( currentchannel < sizeof ( rx_chan_count )) rx_chan_count[currentchannel]++;
-										#endif
-					lastrx = failsafetime;
-                    currentchannel++;
-                    currentchannel%=sizeof(chans);
-                    xn_writereg( RF_CH, chans[currentchannel] ); // Set channel frequency
+                xn_writereg( RF_CH, chans[0] ); // Set channel frequency
+                
+            
+                #ifdef SERIAL_INFO
+                printf( " BIND \n");
+                #endif /* SERIAL_INFO */
+            }
+        }
+        else
+        {   // normal mode
+            #ifdef RXDEBUG
+            rxdebug.packettime = gettime() - lastrxtime;
+            lastrxtime = gettime();
+            #endif /* RXDEBUG */
+            
+            int pass = decode_syma_x5c();
+         
+            if ( pass )
+            { 
+                                
+                #ifndef DISABLE_EXPO
+            
+                float expo_xy=EXPO_XY;
+                float expo_yaw=EXPO_YAW;
+                
+                if(aux[LEVELMODE]){
+                    expo_xy=EXPO_XY_LEVEL;
+                    expo_yaw=EXPO_YAW_LEVEL;
+                }
+            
+                rx[ROLL] = rcexpo ( rx[ROLL] , expo_xy );
+                rx[PITCH] = rcexpo ( rx[PITCH] , expo_xy ); 
+                rx[YAW] = rcexpo ( rx[YAW] , expo_yaw );
+                
+                #endif /* DISABLE_EXPO */
+                
+                failsafetime = gettime(); 
+                failsafe = 0;
+                #ifdef RXDEBUG	
+                packetrx++;
+                if ( currentchannel < sizeof ( rx_chan_count )) rx_chan_count[currentchannel]++;
+                                    #endif
+                lastrx = failsafetime;
+                currentchannel++;
+                currentchannel%=sizeof(chans);
+                xn_writereg( RF_CH, chans[currentchannel] ); // Set channel frequency
 
-				}	
-				else
-				{
-				#ifdef RXDEBUG	
-				rxdebug.failcount++;
-				#endif /* RXDEBUG */
-				}
-			
-			}// end normal rx mode
-				
-		}// end packet received
-        		
-		unsigned long time = gettime();
+            }
+            else
+            {
+                #ifdef RXDEBUG
+                rxdebug.failcount++;
+                #endif /* RXDEBUG */
+            }
+        
+        }// end normal rx mode
+            
+    }// end packet received
+            
+    unsigned long time = gettime();
 
-if ( time - lastrx > 8000* (sizeof(chans) - 2) )
-{
-    currentchannel++;
-    currentchannel%=sizeof(chans);
-    xn_writereg( RF_CH, chans[currentchannel] ); // Set channel frequency
+    if ( time - lastrx > 8000* (sizeof(chans) - 2) )
+    {
+        currentchannel++;
+        currentchannel%=sizeof(chans);
+        xn_writereg( RF_CH, chans[currentchannel] ); // Set channel frequency
 
-    lastrx = time;
-}
-		
-		if( time - failsafetime > FAILSAFETIME )
-		{//  failsafe
-		  failsafe = 1;
-			rx[0] = 0;
-			rx[1] = 0;
-			rx[2] = 0;
-			rx[3] = 0;
-		}
+        lastrx = time;
+    }
+    
+    if( time - failsafetime > FAILSAFETIME )
+    {//  failsafe
+        failsafe = 1;
+        rx[0] = 0;
+        rx[1] = 0;
+        rx[2] = 0;
+        rx[3] = 0;
+    }
 #ifdef RXDEBUG	
-		// packets per second counter
-			if ( time - secondtimer  > 1000000)
-			{
-				rxdebug.packetpersecond = packetrx;
-				packetrx = 0;
-				secondtimer = gettime();
-			}
+    // packets per second counter
+    if ( time - secondtimer  > 1000000)
+    {
+        rxdebug.packetpersecond = packetrx;
+        packetrx = 0;
+        secondtimer = gettime();
+    }
 #endif /* RXDEBUG */
 
 }
-	
+
 
 
 // end cg023 proto

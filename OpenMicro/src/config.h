@@ -28,6 +28,10 @@
 #define EXPO_XY 0.3
 #define EXPO_YAW 0.0
 
+// expo for level mode
+#define EXPO_XY_LEVEL 0.2f
+#define EXPO_YAW_LEVEL EXPO_YAW
+
 
 
 // battery saver
