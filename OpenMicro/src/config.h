@@ -28,6 +28,10 @@
 #define EXPO_XY 0.3
 #define EXPO_YAW 0.0
 
+// expo for level mode
+#define EXPO_XY_LEVEL 0.2f
+#define EXPO_YAW_LEVEL EXPO_YAW
+
 
 
 // battery saver
@@ -127,10 +131,17 @@
 
 #define LEDS_ON CH_ON
 
+// Airmode keeps the PID loop stabilizing the quads orientation even at zero throttle.
+// To stop the motors on ground a switch on the remote control is necessary.
+#define AIRMODE_HOLD_SWITCH CH_OFF
+
+// Uncomment if you want to use gestures to change CH_AUX2
+//#define GESTURES_AUX2
 
 
 // aux1 channel starts on if this is defined, otherwise off.
 //#define AUX1_START_ON
+//#define AUX2_START_ON
 
 // Gestures enable ( gestures 1 = acc only)
 //#define GESTURES1_ENABLE
@@ -188,7 +199,10 @@
 #define RX_SYMA_X5C_PROTOCOL
 
 // uncomment next line to use Syma X5SC stock transmitter
-#define USE_STOCK_TX
+//#define USE_STOCK_TX
+
+// uncomment to use Esky ET6I transmitter
+//#define USE_ET6I_TX
 
 // 0 - 3 - power for telemetry
 #define TX_POWER 1
@@ -205,6 +219,9 @@
 //#define BUZZER_ENABLE
 
 
+// Comment out to disable pid tuning gestures
+//#define PID_GESTURE_TUNING
+//#define COMBINE_PITCH_ROLL_PID_TUNING
 
 
 
@@ -261,6 +278,9 @@
 #define ENABLESTIX 0
 #define ENABLESTIX_TRESHOLD 0.3
 #define ENABLESTIX_TIMEOUT 1e6
+
+// A deadband can be used to eliminate stick center jitter and non-returning to exactly 0.
+//#define STICKS_DEADBAND 0.01f
 
 // overclock to 64Mhz
 //#define ENABLE_OVERCLOCK
@@ -324,4 +344,12 @@
 // so the beacon works after in-flight reset
 #ifdef RX_BAYANG_PROTOCOL_BLE_BEACON
 #undef STOP_LOWBATTERY
+#endif
+
+#ifdef PID_GESTURE_TUNING
+	#if !defined(RX_SYMA_X5C_PROTOCOL)
+		#warning "PID gesture tuning not available"
+		// need to implement loadcal + savecal functions
+		#undef PID_GESTURE_TUNING
+	#endif
 #endif
