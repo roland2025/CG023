@@ -116,6 +116,20 @@ void control( void)
     rxcopy[1] = rx[1]*rate_multiplier;   
     rxcopy[2] = rx[2]*rate_multiplier_yaw;   
     
+    #ifdef STICKS_DEADBAND
+    for (int i = 0; i < 3; i++)
+    {
+        if ( fabsf( rxcopy[ i ] ) <= STICKS_DEADBAND ) {
+            rxcopy[ i ] = 0.0f;
+        } else {
+            if ( rxcopy[ i ] >= 0 ) {
+                rxcopy[ i ] = mapf( rxcopy[ i ], STICKS_DEADBAND, 1, 0, 1 );
+            } else {
+                rxcopy[ i ] = mapf( rxcopy[ i ], -STICKS_DEADBAND, -1, 0, -1 );
+            }
+        }
+    }
+    #endif
     
 #ifndef DISABLE_FLIP_SEQUENCER	
   flip_sequencer();
