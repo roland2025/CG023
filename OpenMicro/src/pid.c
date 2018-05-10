@@ -39,6 +39,7 @@ THE SOFTWARE.
 #include <stdlib.h>
 
 #include "defines.h"
+#include "stdint.h"
 
 
 // Kp                            ROLL, PITCH, YAW
@@ -117,6 +118,10 @@ void pid_precalc()
 
 #ifdef PID_GESTURE_TUNING
 
+#ifdef COMBINE_PITCH_ROLL_PID_TUNING
+    uint8 is_combined_tuning = 1;
+#endif
+
 // Cycle through P / I / D - The initial value is P
 // The return value is the currently selected TERM (after setting the next one)
 // 1: P
@@ -158,10 +163,10 @@ int next_pid_axis()
 	}
 	else {
 		#ifdef COMBINE_PITCH_ROLL_PID_TUNING
-		if (current_pid_axis <2 ) {
+		if (current_pid_axis <2 && is_combined_tuning) {
 			// Skip axis == 1 which is roll, and go directly to 2 (Yaw)
 			current_pid_axis = 2;
-		}
+		} else current_pid_axis++;
 		#else
 		current_pid_axis++;
 		#endif
@@ -183,7 +188,7 @@ int change_pid_value(int increase)
             current_pid_term_pointer[current_pid_axis]=0.2;
         
         #ifdef COMBINE_PITCH_ROLL_PID_TUNING
-        if (current_pid_axis == 0) {
+        if (current_pid_axis == 0 && is_combined_tuning) {
             if(current_pid_term_pointer[current_pid_axis+1]<0.01f)
                 current_pid_term_pointer[current_pid_axis+1]=0.2;
         }
@@ -196,7 +201,7 @@ int change_pid_value(int increase)
 	current_pid_term_pointer[current_pid_axis] = current_pid_term_pointer[current_pid_axis] * multiplier;
 	
     #ifdef COMBINE_PITCH_ROLL_PID_TUNING
-	if (current_pid_axis == 0) {
+	if (current_pid_axis == 0 && is_combined_tuning) {
 		current_pid_term_pointer[current_pid_axis+1] = current_pid_term_pointer[current_pid_axis+1] * multiplier;
 	}
 	#endif

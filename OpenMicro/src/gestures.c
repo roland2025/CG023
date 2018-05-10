@@ -162,6 +162,14 @@ const uint8_t command7[GSIZE] = {
 const uint8_t command8[GSIZE] = {
 	GESTURE_CENTER_IDLE, GESTURE_UP, GESTURE_CENTER, GESTURE_DOWN, GESTURE_CENTER, GESTURE_LEFT, GESTURE_CENTER
 };
+
+#ifdef COMBINE_PITCH_ROLL_PID_TUNING
+// U U D - Switch between combined gesture tuning
+const uint8_t command9[GSIZE] = {
+    GESTURE_CENTER_IDLE, GESTURE_UP, GESTURE_CENTER, GESTURE_UP, GESTURE_CENTER, GESTURE_DOWN, GESTURE_CENTER
+};
+#endif /* COMBINE_PITCH_ROLL_PID_TUNING */
+
 #endif /* PID_GESTURE_TUNING */
 
 uint8_t check_command( uint8_t  buffer1[] , const uint8_t  command[]  )
@@ -264,6 +272,17 @@ int gesture_sequence(int currentgesture)
 				gbuffer[1] = GESTURE_OTHER;
 				return GESTURE_UDL;
 			}
+
+        #ifdef COMBINE_PITCH_ROLL_PID_TUNING
+        if (check_command ( &gbuffer[0] , &command9[0] ))
+        {
+            // command 9
+
+            //change buffer so it does not trigger again
+            gbuffer[1] = GESTURE_OTHER;
+            return GESTURE_UUD;
+        }
+        #endif /* COMBINE_PITCH_ROLL_PID_TUNING */
 		#endif
 
 	}

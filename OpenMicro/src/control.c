@@ -70,6 +70,11 @@ extern float apid(int x);
 
 #ifdef PID_GESTURE_TUNING
 extern void savecal(void);
+
+#ifdef COMBINE_PITCH_ROLL_PID_TUNING
+    extern uint8 is_combined_tuning;
+#endif
+
 #endif /* PID_GESTURE_TUNING */
 
 #ifdef NOMOTORS
@@ -233,6 +238,22 @@ void control( void)
 					// Descrease by 10%
 					ledblink = decrease_pid();
 				}
+
+                #ifdef COMBINE_PITCH_ROLL_PID_TUNING
+                if (command == GESTURE_UUD)
+                {
+                    // switch between combined gesture tuning
+                    pid_gestures_used=1;
+                    
+                    if(is_combined_tuning)
+                        is_combined_tuning = 0;
+                    else
+                        is_combined_tuning = 1;
+                    
+                    ledblink = is_combined_tuning + 1;
+                }
+                #endif /* COMBINE_PITCH_ROLL_PID_TUNING */
+                
 				// flash long on zero
 				if ( pid_gestures_used && ledblink == 0) ledcommand = 1;
 
