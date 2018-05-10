@@ -9,24 +9,24 @@
 
 // rate in deg/sec
 // for acro mode
-#define MAX_RATE 360.0
-#define MAX_RATEYAW 360.0
+#define MAX_RATE 720.0
+#define MAX_RATEYAW 720.0
 
 // max angle for level mode
-#define MAX_ANGLE_HI 55.0f
+#define MAX_ANGLE_HI 60.0f
 
 #define LOW_RATES_MULTI 0.5
 #define LOW_RATES_MULTI_YAW 0.5
 
 // disable inbuilt expo functions
-#define DISABLE_EXPO
+//#define DISABLE_EXPO
 
 // use if your tx has no expo function
 // also comment out DISABLE_EXPO to use
 // -1 to 1 , 0 = no exp
 // positive = less sensitive near center 
-#define EXPO_XY 0.3
-#define EXPO_YAW 0.0
+#define EXPO_XY 0.8f
+#define EXPO_YAW 0.7f
 
 // expo for level mode
 #define EXPO_XY_LEVEL 0.2f
@@ -51,7 +51,7 @@
 // increase if battery low comes on at max throttle
 // decrease if battery low warning goes away at high throttle
 // in volts
-#define VDROP_FACTOR 0.9
+#define VDROP_FACTOR 1.0f
 
 #define AUTO_VDROP_FACTOR
 
@@ -123,25 +123,25 @@
 
 #define HEADLESSMODE CH_OFF
 
-#define LEVELMODE CH_HEADFREE
+#define LEVELMODE CH_AUX1
 
-#define RATES CH_EXPERT
+#define RATES CH_ON
 
-#define STARTFLIP CH_FLIP
+#define STARTFLIP CH_OFF
 
 #define LEDS_ON CH_ON
 
 // Airmode keeps the PID loop stabilizing the quads orientation even at zero throttle.
 // To stop the motors on ground a switch on the remote control is necessary.
-#define AIRMODE_HOLD_SWITCH CH_OFF
+#define AIRMODE_HOLD_SWITCH CH_EXPERT
 
 // Uncomment if you want to use gestures to change CH_AUX2
-//#define GESTURES_AUX2
+#define GESTURES_AUX2
 
 
 // aux1 channel starts on if this is defined, otherwise off.
-//#define AUX1_START_ON
-//#define AUX2_START_ON
+#define AUX1_START_ON
+#define AUX2_START_ON
 
 // Gestures enable ( gestures 1 = acc only)
 //#define GESTURES1_ENABLE
@@ -201,8 +201,10 @@
 // uncomment next line to use Syma X5SC stock transmitter
 //#define USE_STOCK_TX
 
-// uncomment to use Esky ET6I transmitter
-//#define USE_ET6I_TX
+#ifdef RX_SYMA_X5C_PROTOCOL
+    // uncomment to use Esky ET6I transmitter
+    #define USE_ET6I_TX
+#endif /* RX_SYMA_X5C_PROTOCOL */
 
 // 0 - 3 - power for telemetry
 #define TX_POWER 1
@@ -220,8 +222,8 @@
 
 
 // Comment out to disable pid tuning gestures
-//#define PID_GESTURE_TUNING
-//#define COMBINE_PITCH_ROLL_PID_TUNING
+#define PID_GESTURE_TUNING
+#define COMBINE_PITCH_ROLL_PID_TUNING
 
 
 
@@ -249,7 +251,7 @@
 #define TRIM_ROLL 0.0
 
 // disable motors for testing
-// #define NOMOTORS
+//#define NOMOTORS
 
 // throttle direct to motors for thrust measure
 // #define MOTORS_TO_THROTTLE
@@ -262,7 +264,7 @@
 #define FAILSAFETIME 1000000    // one second
 
 // max rate used by level pid ( limit )
-#define LEVEL_MAX_RATE 360
+#define LEVEL_MAX_RATE 720
 
 // invert yaw pid for hubsan motors
 //#define INVERT_YAW_PID
@@ -280,7 +282,7 @@
 #define ENABLESTIX_TIMEOUT 1e6
 
 // A deadband can be used to eliminate stick center jitter and non-returning to exactly 0.
-//#define STICKS_DEADBAND 0.01f
+#define STICKS_DEADBAND 0.01f
 
 // overclock to 64Mhz
 //#define ENABLE_OVERCLOCK
