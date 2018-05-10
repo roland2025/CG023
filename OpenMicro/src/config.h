@@ -133,7 +133,7 @@
 
 // Airmode keeps the PID loop stabilizing the quads orientation even at zero throttle.
 // To stop the motors on ground a switch on the remote control is necessary.
-#define AIRMODE_HOLD_SWITCH CH_EXPERT // DEVO_CHAN_5
+#define AIRMODE_HOLD_SWITCH CH_OFF
 
 // Uncomment if you want to use gestures to change CH_AUX2
 //#define GESTURES_AUX2
@@ -202,7 +202,7 @@
 //#define USE_STOCK_TX
 
 // uncomment to use Esky ET6I transmitter
-#define USE_ET6I_TX
+//#define USE_ET6I_TX
 
 // 0 - 3 - power for telemetry
 #define TX_POWER 1
