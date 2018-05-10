@@ -178,6 +178,16 @@ int change_pid_value(int increase)
 	if (increase) {
 		multiplier = (float)PID_GESTURES_MULTI;
 		number_of_increments[current_pid_term][current_pid_axis]++;
+        
+        if(current_pid_term_pointer[current_pid_axis]<0.01f)
+            current_pid_term_pointer[current_pid_axis]=0.2;
+        
+        #ifdef COMBINE_PITCH_ROLL_PID_TUNING
+        if (current_pid_axis == 0) {
+            if(current_pid_term_pointer[current_pid_axis+1]<0.01f)
+                current_pid_term_pointer[current_pid_axis+1]=0.2;
+        }
+        #endif /* COMBINE_PITCH_ROLL_PID_TUNING */
 	}
 	else {
 		number_of_increments[current_pid_term][current_pid_axis]--;
