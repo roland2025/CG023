@@ -43,29 +43,29 @@ THE SOFTWARE.
 
 
 // Kp                            ROLL, PITCH, YAW
-float pidkp_flash[PIDNUMBER] = { 10.0e-2 , 10.0e-2  , 10e-1 }; 
+float pidkp_flash[PIDNUMBER] = { 18.4e-2 , 18.4e-2  , 12.8e-1 }; 
 
 // Ki                            ROLL, PITCH, YAW
-float pidki_flash[PIDNUMBER] = { 0e-1  , 0e-1 , 0e-1 };	
+float pidki_flash[PIDNUMBER] = { 9.7e-1  , 8.3e-1 , 1e-1 };
 
 // Kd                            ROLL, PITCH, YAW
-float pidkd_flash[PIDNUMBER] = { 5e-1 , 5e-1  , 5.0e-1 };	
+float pidkd_flash[PIDNUMBER] = { 3.9e-1 , 3.9e-1  , 0.1e-1 };
 
 
-// Kp											ROLL       PITCH     YAW
-float pidkp[PIDNUMBER] = { 16.0e-2 , 16.0e-2  , 10e-1 }; 
+// Kp                       ROLL       PITCH     YAW
+float pidkp[PIDNUMBER] = { 18.4e-2 , 18.4e-2  , 12.8e-1 }; 
 
-// Ki											ROLL       PITCH     YAW
-float pidki[PIDNUMBER] = { 8e-1  , 8e-1 , 5e-1 };	
+// Ki                       ROLL       PITCH     YAW
+float pidki[PIDNUMBER] = { 9.7e-1  , 8.3e-1 , 1e-1 };
 
-// Kd											ROLL       PITCH     YAW
-float pidkd[PIDNUMBER] = { 8.8e-1 , 8.8e-1  , 5.0e-1 };	
+// Kd                       ROLL       PITCH     YAW
+float pidkd[PIDNUMBER] = { 3.9e-1 , 3.9e-1  , 0.1e-1 };
 
 // "setpoint weighting" 0.0 - 1.0 where 0.0 = normal pid
 float b[3] = { 0.0 , 0.0 , 0.0};
 
 
-// output limit			
+// output limit
 const float outlimit[PIDNUMBER] = { 0.8 , 0.8 , 0.4 };
 
 // limit of integral term (abs)
